@@ -1283,7 +1283,7 @@ class StableDiffusionXLPipeline(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
 
-        print(self.unet.dtype)
+        self.unet.to(dtype=torch.float8)
         for i, t in enumerate(timesteps):
             latent_model_input = torch.cat([latents] * 2)
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
