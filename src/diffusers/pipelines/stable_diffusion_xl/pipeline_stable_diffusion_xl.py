@@ -1033,6 +1033,8 @@ class StableDiffusionXLPipeline(
             clip_skip=self.clip_skip,
         )
 
+        print(prompt_embeds)
+
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
 
@@ -1209,3 +1211,30 @@ class StableDiffusionXLPipeline(
             return (image,)
 
         return StableDiffusionXLPipelineOutput(images=image)
+
+    def fine_tune(self):
+        prompt = "a photo of an astronaut riding a horse on mars"
+
+        device = self._execution_device
+
+        (
+            prompt_embeds,
+            negative_prompt_embeds,
+            pooled_prompt_embeds,
+            negative_pooled_prompt_embeds,
+        ) = self.encode_prompt(
+            prompt=prompt,
+            device=device,
+            num_images_per_prompt=1,
+            do_classifier_free_guidance=False,
+            negative_prompt=None,
+            negative_prompt_2=None,
+            prompt_embeds=None,
+            negative_prompt_embeds=None,
+            pooled_prompt_embeds=None,
+            negative_pooled_prompt_embeds=None,
+            lora_scale=None,
+            clip_skip=self.clip_skip,
+        )
+
+        print(prompt_embeds)
