@@ -1049,7 +1049,6 @@ class StableDiffusionXLPipeline(
             latents,
         )
 
-        latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
         # 6. Prepare extra step kwargs. TODO: Logic should ideally just be moved out of the pipeline
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator, eta)
@@ -1252,7 +1251,16 @@ class StableDiffusionXLPipeline(
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
 
-        latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
+        latents = self.prepare_latents(
+            1,
+            4,
+            128,
+            128,
+            prompt_embeds.dtype,
+            device,
+            None,
+            None,
+        )
 
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
 
