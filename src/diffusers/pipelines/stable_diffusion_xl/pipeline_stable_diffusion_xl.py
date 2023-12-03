@@ -1228,6 +1228,7 @@ class StableDiffusionXLPipeline(
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
+        self.vae.requires_grad_(False)
         
         with torch.no_grad():
             (
@@ -1289,8 +1290,7 @@ class StableDiffusionXLPipeline(
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
-            with torch.no_grad():
-                noise_pred = self.unet(
+            noise_pred = self.unet(
                     latent_model_input,
                     t,
                     encoder_hidden_states=prompt_embeds,
@@ -1298,14 +1298,13 @@ class StableDiffusionXLPipeline(
                     cross_attention_kwargs=None,
                     added_cond_kwargs=added_cond_kwargs,
                     return_dict=False,
-                )[0]
+            )[0]
 
             noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
             noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
             
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
-        self.vae.requires_grad_(False)
         self.upcast_vae()
         latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
         test_image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
