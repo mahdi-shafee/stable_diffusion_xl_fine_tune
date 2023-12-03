@@ -1257,7 +1257,7 @@ class StableDiffusionXLPipeline(
                 t,
                 encoder_hidden_states=prompt_embeds,
                 timestep_cond=None,
-                cross_attention_kwargs=self.cross_attention_kwargs,
+                cross_attention_kwargs=None,
                 added_cond_kwargs=None,
                 return_dict=False,
             )[0]
