@@ -1088,6 +1088,10 @@ class StableDiffusionXLPipeline(
         add_text_embeds = add_text_embeds.to(device)
         add_time_ids = add_time_ids.to(device).repeat(batch_size * num_images_per_prompt, 1)
 
+        print("prompt_embeds", prompt_embeds)
+        print("text_embeds", add_text_embeds)
+        print("time_ids", add_time_ids)
+
         if ip_adapter_image is not None:
             image_embeds, negative_image_embeds = self.encode_image(ip_adapter_image, device, num_images_per_prompt)
             if self.do_classifier_free_guidance:
@@ -1135,8 +1139,7 @@ class StableDiffusionXLPipeline(
                     print('kir')
                     added_cond_kwargs["image_embeds"] = image_embeds
 
-                print("text_embeds", add_text_embeds)
-                print("time_ids", add_time_ids)
+                
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
@@ -1259,6 +1262,11 @@ class StableDiffusionXLPipeline(
         )
 
         add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0)
+        prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
+        add_text_embeds = torch.cat([negative_pooled_prompt_embeds, add_text_embeds], dim=0)
+
+        print('prompt_embeds', prompt_embeds)
+        print('add_text_embeds', add_text_embeds)
         print('add time ids', add_time_ids)
         
         if self.unet.config.time_cond_proj_dim is not None:
