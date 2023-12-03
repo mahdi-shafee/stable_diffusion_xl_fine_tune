@@ -1250,7 +1250,17 @@ class StableDiffusionXLPipeline(
 
         latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
-        timestep_cond = None
+        add_time_ids = self._get_add_time_ids(
+            (1024, 1024),
+            (0, 0),
+            (1024, 1024),
+            dtype=prompt_embeds.dtype,
+            text_encoder_projection_dim=1280,
+        )
+
+        add_time_ids = torch.cat([negative_add_time_ids, add_time_ids], dim=0)
+        print('add time ids', add_time_ids)
+        
         if self.unet.config.time_cond_proj_dim is not None:
             guidance_scale_tensor = torch.tensor(self.guidance_scale - 1).repeat(batch_size * num_images_per_prompt)
             timestep_cond = self.get_guidance_scale_embedding(
