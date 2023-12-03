@@ -1257,7 +1257,7 @@ class StableDiffusionXLPipeline(
             text_encoder_projection_dim=1280,
         )
 
-        add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0)
+        add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0).to(device)
         prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
         add_text_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
 
