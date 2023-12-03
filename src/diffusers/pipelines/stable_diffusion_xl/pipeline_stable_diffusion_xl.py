@@ -1221,7 +1221,7 @@ class StableDiffusionXLPipeline(
 
         device = self._execution_device
 
-        self.encode_prompt.text_encoder.requires_grad_(False)
+        self.encode_prompt.requires_grad_(False)
 
         (
             prompt_embeds,
