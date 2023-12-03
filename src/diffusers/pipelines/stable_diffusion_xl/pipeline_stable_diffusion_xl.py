@@ -1088,10 +1088,6 @@ class StableDiffusionXLPipeline(
         add_text_embeds = add_text_embeds.to(device)
         add_time_ids = add_time_ids.to(device).repeat(batch_size * num_images_per_prompt, 1)
 
-        print("prompt_embeds", prompt_embeds)
-        print("text_embeds", add_text_embeds)
-        print("time_ids", add_time_ids)
-
         if ip_adapter_image is not None:
             image_embeds, negative_image_embeds = self.encode_image(ip_adapter_image, device, num_images_per_prompt)
             if self.do_classifier_free_guidance:
@@ -1279,13 +1275,15 @@ class StableDiffusionXLPipeline(
             latent_model_input = latents
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
+            added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
+
             noise_pred = self.unet(
                 latent_model_input,
                 t,
                 encoder_hidden_states=prompt_embeds,
                 timestep_cond=None,
                 cross_attention_kwargs=None,
-                added_cond_kwargs=None,
+                added_cond_kwargs=added_cond_kwargs,
                 return_dict=False,
             )[0]
 
