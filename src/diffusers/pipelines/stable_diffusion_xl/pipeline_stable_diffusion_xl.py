@@ -1059,6 +1059,8 @@ class StableDiffusionXLPipeline(
         else:
             text_encoder_projection_dim = self.text_encoder_2.config.projection_dim
 
+        
+        print(original_size, crops_coords_top_left, target_size, text_encoder_projection_dim)
         add_time_ids = self._get_add_time_ids(
             original_size,
             crops_coords_top_left,
@@ -1243,23 +1245,6 @@ class StableDiffusionXLPipeline(
                 lora_scale=None,
                 clip_skip=None,
             )
-
-        add_time_ids = self._get_add_time_ids(
-            None,
-            (0, 0),
-            None,
-            dtype=prompt_embeds.dtype,
-            text_encoder_projection_dim=None,
-        )
-            
-        add_text_embeds = torch.cat([negative_pooled_prompt_embeds, None], dim=0)
-        add_time_ids = torch.cat([negative_add_time_ids, add_time_ids], dim=0)
-
-        add_text_embeds = add_text_embeds.to(device)
-        add_time_ids = add_time_ids.to(device).repeat(1, 1)
-
-        print(add_text_embeds)
-        print(add_time_ids)
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
 
