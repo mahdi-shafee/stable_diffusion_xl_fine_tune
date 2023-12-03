@@ -1299,7 +1299,7 @@ class StableDiffusionXLPipeline(
                 return_dict=False,
             )[0]
 
-            print(noise_pred)
+            print(noise_pred.shape)
 
             noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
             noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
