@@ -1248,6 +1248,13 @@ class StableDiffusionXLPipeline(
 
         latents = randn_tensor((1, 4, 64, 64), generator=None, device=device, dtype=prompt_embeds.dtype)
 
+        timestep_cond = None
+        if self.unet.config.time_cond_proj_dim is not None:
+            guidance_scale_tensor = torch.tensor(self.guidance_scale - 1).repeat(batch_size * num_images_per_prompt)
+            timestep_cond = self.get_guidance_scale_embedding(
+                guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
+            ).to(device=device, dtype=latents.dtype)
+
         for i, t in enumerate(timesteps):
             latent_model_input = latents
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
@@ -1256,7 +1263,7 @@ class StableDiffusionXLPipeline(
                 latent_model_input,
                 t,
                 encoder_hidden_states=prompt_embeds,
-                timestep_cond=None,
+                timestep_cond=timestep_cond,
                 cross_attention_kwargs=None,
                 added_cond_kwargs=None,
                 return_dict=False,
