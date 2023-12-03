@@ -1289,16 +1289,17 @@ class StableDiffusionXLPipeline(
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
-            with torch.no_grad():            
-                noise_pred = self.unet(
-                    latent_model_input,
-                    t,
-                    encoder_hidden_states=prompt_embeds,
-                    timestep_cond=None,
-                    cross_attention_kwargs=None,
-                    added_cond_kwargs=added_cond_kwargs,
-                    return_dict=False,
-                )[0]
+            noise_pred = self.unet(
+                latent_model_input,
+                t,
+                encoder_hidden_states=prompt_embeds,
+                timestep_cond=None,
+                cross_attention_kwargs=None,
+                added_cond_kwargs=added_cond_kwargs,
+                return_dict=False,
+            )[0]
+
+            print(noise_pred)
 
             noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
             noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
