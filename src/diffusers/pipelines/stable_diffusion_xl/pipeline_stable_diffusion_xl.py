@@ -1248,7 +1248,7 @@ class StableDiffusionXLPipeline(
 
         latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
-         extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
+        extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
 
         add_time_ids = self._get_add_time_ids( ##TODO: size.
             (1024, 1024),
