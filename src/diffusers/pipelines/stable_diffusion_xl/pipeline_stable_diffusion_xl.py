@@ -1119,22 +1119,25 @@ class StableDiffusionXLPipeline(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
 
-        print(latents.shape)
+        print('latents', latents.shape)
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
-                print(latent_model_input.shaape)
+                print('latent_model_input', latent_model_input.shape)
 
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-                print(latent_model_input.shaape)
+                print('latent_model_input', latent_model_input.shape)
 
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None:
                     added_cond_kwargs["image_embeds"] = image_embeds
+
+                print('timestep_cond', timestep_cond)
+                print('added_cond_kwargs', added_cond_kwargs)
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
