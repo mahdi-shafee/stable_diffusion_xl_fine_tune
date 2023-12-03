@@ -1297,9 +1297,12 @@ class StableDiffusionXLPipeline(
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
             print(latents.shape)
 
-        self.upcast_vae()
-        latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-        image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
-        image = self.image_processor.postprocess(image, output_type=output_type)
-        image = StableDiffusionXLPipelineOutput(images=image)
-        self.vae.to(dtype=torch.float16)
+        with torch.no_grad():
+            self.upcast_vae()
+            latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+            image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
+            image = self.image_processor.postprocess(image, output_type="pil")
+            image = StableDiffusionXLPipelineOutput(images=image)
+            self.vae.to(dtype=torch.float16)
+
+        return image
