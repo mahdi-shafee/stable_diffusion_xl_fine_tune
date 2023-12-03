@@ -1033,11 +1033,8 @@ class StableDiffusionXLPipeline(
             clip_skip=self.clip_skip,
         )
 
-        print(prompt_embeds)
-
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
-        print(timesteps)
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -1122,13 +1119,17 @@ class StableDiffusionXLPipeline(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
 
+        print(latents.shape)
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
+                print(latent_model_input.shaape)
+
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+                print(latent_model_input.shaape)
 
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
