@@ -1123,7 +1123,6 @@ class StableDiffusionXLPipeline(
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
-                print(latents.shape)
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
@@ -1159,6 +1158,7 @@ class StableDiffusionXLPipeline(
 
                 # compute the previous noisy sample x_t -> x_t-1
                 latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                print(latents.shape)
 
                 if callback_on_step_end is not None:
                     callback_kwargs = {}
@@ -1175,6 +1175,7 @@ class StableDiffusionXLPipeline(
                     )
                     add_time_ids = callback_outputs.pop("add_time_ids", add_time_ids)
                     negative_add_time_ids = callback_outputs.pop("negative_add_time_ids", negative_add_time_ids)
+                    print('ga')
 
                 # call the callback, if provided
                 if i == len(timesteps) - 1 or ((i + 1) > num_warmup_steps and (i + 1) % self.scheduler.order == 0):
@@ -1182,6 +1183,7 @@ class StableDiffusionXLPipeline(
                     if callback is not None and i % callback_steps == 0:
                         step_idx = i // getattr(self.scheduler, "order", 1)
                         callback(step_idx, t, latents)
+                        print('ga2')
 
                 if XLA_AVAILABLE:
                     xm.mark_step()
@@ -1272,7 +1274,6 @@ class StableDiffusionXLPipeline(
             ).to(device=device, dtype=latents.dtype)
 
         for i, t in enumerate(timesteps):
-            print(latents.shape)
             latent_model_input = torch.cat([latents] * 2)
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
@@ -1292,6 +1293,7 @@ class StableDiffusionXLPipeline(
                 )[0]
 
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+            print(latents.shape)
 
         latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
         with torch.no_grad():
