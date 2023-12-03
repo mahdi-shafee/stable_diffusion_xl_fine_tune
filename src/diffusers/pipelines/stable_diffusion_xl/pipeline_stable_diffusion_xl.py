@@ -1301,5 +1301,5 @@ class StableDiffusionXLPipeline(
         with torch.no_grad():
             image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
         self.vae.to(dtype=torch.float16)
-        image = self.image_processor.postprocess(image, output_type=output_type)
+        image = self.image_processor.postprocess(image, output_type="pil")
         return StableDiffusionXLPipelineOutput(images=image)
