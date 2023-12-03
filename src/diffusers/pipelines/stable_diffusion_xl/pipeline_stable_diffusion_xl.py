@@ -1135,6 +1135,8 @@ class StableDiffusionXLPipeline(
                     added_cond_kwargs["image_embeds"] = image_embeds
 
                 
+                print(latent_model_input.shape, prompt_embeds.shape)
+                
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
@@ -1273,6 +1275,8 @@ class StableDiffusionXLPipeline(
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
+
+            print(latent_model_input.shape, prompt_embeds.shape)
 
             with torch.no_grad():            
                 noise_pred = self.unet(
