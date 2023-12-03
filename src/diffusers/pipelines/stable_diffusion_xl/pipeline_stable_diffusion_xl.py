@@ -1258,7 +1258,7 @@ class StableDiffusionXLPipeline(
             text_encoder_projection_dim=1280,
         )
 
-        add_time_ids = torch.cat([negative_add_time_ids, add_time_ids], dim=0)
+        add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0)
         print('add time ids', add_time_ids)
         
         if self.unet.config.time_cond_proj_dim is not None:
