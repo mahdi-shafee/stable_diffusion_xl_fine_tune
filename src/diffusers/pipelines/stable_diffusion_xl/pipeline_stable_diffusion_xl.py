@@ -1272,7 +1272,7 @@ class StableDiffusionXLPipeline(
             ).to(device=device, dtype=latents.dtype)
 
         for i, t in enumerate(timesteps):
-            latent_model_input = latents
+            latent_model_input = latent_model_input = torch.cat([latents] * 2)
             latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
