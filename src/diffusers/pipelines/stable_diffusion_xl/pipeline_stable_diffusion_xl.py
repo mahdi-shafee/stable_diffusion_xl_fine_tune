@@ -1215,7 +1215,7 @@ class StableDiffusionXLPipeline(
 
     def fine_tune(
             self,
-            num_images_per_prompt: Optional[int] = 1,
+             num_inference_steps: int = 50,
     ):
         prompt = "a photo of an astronaut riding a horse on mars"
 
