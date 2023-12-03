@@ -1222,7 +1222,8 @@ class StableDiffusionXLPipeline(
 
     def fine_tune(
             self,
-             num_inference_steps: int = 40,
+            image_size: int=1024,
+            num_inference_steps: int = 40,
     ):
         prompt = "a photo of an astronaut riding a horse on mars"
 
@@ -1254,8 +1255,8 @@ class StableDiffusionXLPipeline(
         latents = self.prepare_latents(
             1,
             4,
-            526,
-            526,
+            image_size,
+            image_size,
             prompt_embeds.dtype,
             device,
             None,
@@ -1265,9 +1266,9 @@ class StableDiffusionXLPipeline(
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
 
         add_time_ids = self._get_add_time_ids( ##TODO: size.
-            (526, 526),
+            (image_size, image_size),
             (0, 0),
-            (526, 526),
+            (image_size, image_size),
             dtype=prompt_embeds.dtype,
             text_encoder_projection_dim=1280,
         )
