@@ -1246,7 +1246,7 @@ class StableDiffusionXLPipeline(
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
 
-        latents = torch.randn((1, 4, 64, 64), device)
+        latents = randn_tensor((1, 4, 64, 64), generator=None, device=device, dtype=prompt_embeds.dtype)
 
         for i, t in enumerate(timesteps):
             latent_model_input = latents
