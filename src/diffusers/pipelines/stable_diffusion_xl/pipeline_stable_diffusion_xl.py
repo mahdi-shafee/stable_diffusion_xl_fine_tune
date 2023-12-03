@@ -1289,7 +1289,7 @@ class StableDiffusionXLPipeline(
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
-            with no_grad():
+            with torch.no_grad():
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
