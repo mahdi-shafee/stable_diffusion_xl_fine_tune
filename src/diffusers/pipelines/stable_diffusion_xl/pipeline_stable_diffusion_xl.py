@@ -1246,7 +1246,7 @@ class StableDiffusionXLPipeline(
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
 
-        latents = torch.randn((args.train_batch_size, 4, 64, 64), device)
+        latents = torch.randn((1, 4, 64, 64), device)
 
         for i, t in enumerate(timesteps):
             latent_model_input = latents
@@ -1265,7 +1265,8 @@ class StableDiffusionXLPipeline(
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
         latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-        image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
+        with torch.no_grad():
+            image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
         self.vae.to(dtype=torch.float16)
         image = self.image_processor.postprocess(image, output_type=output_type)
         return StableDiffusionXLPipelineOutput(images=image)
