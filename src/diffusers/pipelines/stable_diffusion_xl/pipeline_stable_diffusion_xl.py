@@ -1238,7 +1238,7 @@ class StableDiffusionXLPipeline(
                 prompt=prompt,
                 device=device,
                 num_images_per_prompt=1,
-                do_classifier_free_guidance=False,
+                do_classifier_free_guidance=True,
                 negative_prompt=None,
                 negative_prompt_2=None,
                 prompt_embeds=None,
