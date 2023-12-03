@@ -1254,8 +1254,8 @@ class StableDiffusionXLPipeline(
         latents = self.prepare_latents(
             1,
             4,
-            1024,
-            1024,
+            526,
+            526,
             prompt_embeds.dtype,
             device,
             None,
@@ -1265,9 +1265,9 @@ class StableDiffusionXLPipeline(
         extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
 
         add_time_ids = self._get_add_time_ids( ##TODO: size.
-            (1024, 1024),
+            (526, 526),
             (0, 0),
-            (1024, 1024),
+            (526, 526),
             dtype=prompt_embeds.dtype,
             text_encoder_projection_dim=1280,
         )
@@ -1288,8 +1288,6 @@ class StableDiffusionXLPipeline(
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
-            print(latent_model_input.shape, prompt_embeds.shape)
-
             with torch.no_grad():            
                 noise_pred = self.unet(
                     latent_model_input,
@@ -1305,7 +1303,6 @@ class StableDiffusionXLPipeline(
             noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
             
             latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
-            print(latents.shape)
 
         with torch.no_grad():
             self.upcast_vae()
