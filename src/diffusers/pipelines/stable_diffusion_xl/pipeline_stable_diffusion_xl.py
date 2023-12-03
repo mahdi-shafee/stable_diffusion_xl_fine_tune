@@ -1060,7 +1060,6 @@ class StableDiffusionXLPipeline(
             text_encoder_projection_dim = self.text_encoder_2.config.projection_dim
 
         
-        print(original_size, crops_coords_top_left, target_size, text_encoder_projection_dim)
         add_time_ids = self._get_add_time_ids(
             original_size,
             crops_coords_top_left,
@@ -1249,6 +1248,8 @@ class StableDiffusionXLPipeline(
 
         latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
+         extra_step_kwargs = self.prepare_extra_step_kwargs(generator=None, eta=0.0)
+
         add_time_ids = self._get_add_time_ids( ##TODO: size.
             (1024, 1024),
             (0, 0),
@@ -1260,10 +1261,6 @@ class StableDiffusionXLPipeline(
         add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0).to(device)
         prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
         add_text_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
-
-        print('prompt_embeds', prompt_embeds)
-        print('add_text_embeds', add_text_embeds)
-        print('add time ids', add_time_ids)
         
         if self.unet.config.time_cond_proj_dim is not None:
             guidance_scale_tensor = torch.tensor(self.guidance_scale - 1).repeat(batch_size * num_images_per_prompt)
