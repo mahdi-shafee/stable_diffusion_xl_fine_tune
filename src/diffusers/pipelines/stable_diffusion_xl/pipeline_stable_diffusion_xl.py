@@ -1240,7 +1240,7 @@ class StableDiffusionXLPipeline(
                 pooled_prompt_embeds=None,
                 negative_pooled_prompt_embeds=None,
                 lora_scale=None,
-                clip_skip=self.clip_skip,
+                clip_skip=None,
             )
         print(prompt_embeds)
 
