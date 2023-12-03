@@ -1212,38 +1212,60 @@ class StableDiffusionXLPipeline(
             return (image,)
 
         return StableDiffusionXLPipelineOutput(images=image)
+        
 
     def fine_tune(
             self,
-             num_inference_steps: int = 50,
+             num_inference_steps: int = 40,
     ):
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
         
-        (
-            prompt_embeds,
-            negative_prompt_embeds,
-            pooled_prompt_embeds,
-            negative_pooled_prompt_embeds,
-        ) = self.encode_prompt(
-            prompt=prompt,
-            device=device,
-            num_images_per_prompt=1,
-            do_classifier_free_guidance=False,
-            negative_prompt=None,
-            negative_prompt_2=None,
-            prompt_embeds=None,
-            negative_prompt_embeds=None,
-            pooled_prompt_embeds=None,
-            negative_pooled_prompt_embeds=None,
-            lora_scale=None,
-            clip_skip=self.clip_skip,
-        )
-
-        prompt_embeds = prompt_embeds.detach()
-
+        with torch.no_grad():
+            (
+                prompt_embeds,
+                negative_prompt_embeds,
+                pooled_prompt_embeds,
+                negative_pooled_prompt_embeds,
+            ) = self.encode_prompt(
+                prompt=prompt,
+                device=device,
+                num_images_per_prompt=1,
+                do_classifier_free_guidance=False,
+                negative_prompt=None,
+                negative_prompt_2=None,
+                prompt_embeds=None,
+                negative_prompt_embeds=None,
+                pooled_prompt_embeds=None,
+                negative_pooled_prompt_embeds=None,
+                lora_scale=None,
+                clip_skip=self.clip_skip,
+            )
         print(prompt_embeds)
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
-        print(timesteps)
+
+        latents = torch.randn((args.train_batch_size, 4, 64, 64), device)
+
+        for i, t in enumerate(timesteps):
+            latent_model_input = latents
+            latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+
+            noise_pred = self.unet(
+                latent_model_input,
+                t,
+                encoder_hidden_states=prompt_embeds,
+                timestep_cond=None,
+                cross_attention_kwargs=self.cross_attention_kwargs,
+                added_cond_kwargs=None,
+                return_dict=False,
+            )[0]
+
+            latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+
+        latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+        image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
+        self.vae.to(dtype=torch.float16)
+        image = self.image_processor.postprocess(image, output_type=output_type)
+        return StableDiffusionXLPipelineOutput(images=image)
