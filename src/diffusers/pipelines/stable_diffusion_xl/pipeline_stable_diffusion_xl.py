@@ -1037,6 +1037,7 @@ class StableDiffusionXLPipeline(
 
         # 4. Prepare timesteps
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, timesteps)
+        print(timesteps)
 
         # 5. Prepare latent variables
         num_channels_latents = self.unet.config.in_channels
@@ -1212,10 +1213,15 @@ class StableDiffusionXLPipeline(
 
         return StableDiffusionXLPipelineOutput(images=image)
 
-    def fine_tune(self):
+    def fine_tune(
+            self,
+            num_images_per_prompt: Optional[int] = 1,
+    ):
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
+
+        self.encode_prompt.text_encoder.requires_grad_(False)
 
         (
             prompt_embeds,
@@ -1238,3 +1244,6 @@ class StableDiffusionXLPipeline(
         )
 
         print(prompt_embeds)
+
+        timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
+        print(timesteps)
