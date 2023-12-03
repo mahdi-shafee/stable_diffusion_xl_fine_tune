@@ -1254,8 +1254,8 @@ class StableDiffusionXLPipeline(
         latents = self.prepare_latents(
             1,
             4,
-            128,
-            128,
+            1024,
+            1024,
             prompt_embeds.dtype,
             device,
             None,
