@@ -1220,9 +1220,7 @@ class StableDiffusionXLPipeline(
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
-
-        self.encode_prompt.requires_grad_(False)
-
+        
         (
             prompt_embeds,
             negative_prompt_embeds,
@@ -1242,6 +1240,8 @@ class StableDiffusionXLPipeline(
             lora_scale=None,
             clip_skip=self.clip_skip,
         )
+
+        prompt_embeds = prompt_embeds.detach()
 
         print(prompt_embeds)
 
