@@ -1253,7 +1253,7 @@ class StableDiffusionXLPipeline(
 
         latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
-        add_time_ids = self._get_add_time_ids(
+        add_time_ids = self._get_add_time_ids( ##TODO: size.
             (1024, 1024),
             (0, 0),
             (1024, 1024),
@@ -1263,7 +1263,7 @@ class StableDiffusionXLPipeline(
 
         add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0)
         prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
-        add_text_embeds = torch.cat([negative_pooled_prompt_embeds, add_text_embeds], dim=0)
+        add_text_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
 
         print('prompt_embeds', prompt_embeds)
         print('add_text_embeds', add_text_embeds)
