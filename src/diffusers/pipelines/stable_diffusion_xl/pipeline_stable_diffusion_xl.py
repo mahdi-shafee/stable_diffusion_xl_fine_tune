@@ -1118,26 +1118,23 @@ class StableDiffusionXLPipeline(
             timestep_cond = self.get_guidance_scale_embedding(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
-
-        print('latents', latents.shape)
+            
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
                 # expand the latents if we are doing classifier free guidance
                 latent_model_input = torch.cat([latents] * 2) if self.do_classifier_free_guidance else latents
 
-                print('latent_model_input', latent_model_input.shape)
-
                 latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
-                print('latent_model_input', latent_model_input.shape)
 
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None:
+                    print('kir')
                     added_cond_kwargs["image_embeds"] = image_embeds
 
-                print('timestep_cond', timestep_cond)
-                print('added_cond_kwargs', added_cond_kwargs)
+                print("text_embeds", add_text_embeds)
+                print("time_ids", add_time_ids)
                 noise_pred = self.unet(
                     latent_model_input,
                     t,
@@ -1246,11 +1243,27 @@ class StableDiffusionXLPipeline(
                 lora_scale=None,
                 clip_skip=None,
             )
-        print(prompt_embeds)
+
+        add_time_ids = self._get_add_time_ids(
+            None,
+            (0, 0),
+            None,
+            dtype=prompt_embeds.dtype,
+            text_encoder_projection_dim=None,
+        )
+            
+        add_text_embeds = torch.cat([negative_pooled_prompt_embeds, None], dim=0)
+        add_time_ids = torch.cat([negative_add_time_ids, add_time_ids], dim=0)
+
+        add_text_embeds = add_text_embeds.to(device)
+        add_time_ids = add_time_ids.to(device).repeat(1, 1)
+
+        print(add_text_embeds)
+        print(add_time_ids)
 
         timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
 
-        latents = randn_tensor((1, 4, 64, 64), generator=None, device=device, dtype=prompt_embeds.dtype)
+        latents = randn_tensor((1, 4, 128, 128), generator=None, device=device, dtype=prompt_embeds.dtype)
 
         timestep_cond = None
         if self.unet.config.time_cond_proj_dim is not None:
@@ -1267,7 +1280,7 @@ class StableDiffusionXLPipeline(
                 latent_model_input,
                 t,
                 encoder_hidden_states=prompt_embeds,
-                timestep_cond=timestep_cond,
+                timestep_cond=None,
                 cross_attention_kwargs=None,
                 added_cond_kwargs=None,
                 return_dict=False,
