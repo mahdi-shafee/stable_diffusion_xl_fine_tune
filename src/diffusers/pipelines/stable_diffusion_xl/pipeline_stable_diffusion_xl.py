@@ -1228,7 +1228,6 @@ class StableDiffusionXLPipeline(
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
-        #self.vae.requires_grad_(False)
         
         with torch.no_grad():
             (
@@ -1307,6 +1306,7 @@ class StableDiffusionXLPipeline(
 
         self.upcast_vae()
         latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+        self.vae.requires_grad_(False)
         test_image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
         image = test_image
         image = self.image_processor.postprocess(image.detach(), output_type="pil")
