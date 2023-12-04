@@ -1289,6 +1289,7 @@ class StableDiffusionXLPipeline(
 
             added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
+            self.unet.requires_grad_(False)
             noise_pred = self.unet(
                     latent_model_input,
                     t,
