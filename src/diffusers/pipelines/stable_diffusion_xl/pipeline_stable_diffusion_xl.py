@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import inspect
+from accelerate import Accelerator
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch
@@ -1225,6 +1226,28 @@ class StableDiffusionXLPipeline(
             image_size: int=1024,
             num_inference_steps: int = 40,
     ):
+        self.accelerator = Accelerator(
+            gradient_accumulation_steps=1,
+            mixed_precision=None,
+            log_with=None,
+            logging_dir=None,
+            project_config=None,
+        )
+
+        self.optimizer = torch.optim.AdamW(
+            self.unet.parameters(),
+            lr=1e-5,,
+            betas=(0.9, 0.999),
+            weight_decay=1e-2,
+            eps=1e-08,
+        )
+
+        self.unet, self.optimizer, self.train_dataloader = self.accelerator.prepare(
+            self.unet, self.optimizer, self.train_dataloader
+        )
+        
+        self.vae.to(self.accelerator.device)
+        
         prompt = "a photo of an astronaut riding a horse on mars"
 
         device = self._execution_device
@@ -1237,7 +1260,7 @@ class StableDiffusionXLPipeline(
                 negative_pooled_prompt_embeds,
             ) = self.encode_prompt(
                 prompt=prompt,
-                device=device,
+                device=self.accelerator.device,
                 num_images_per_prompt=1,
                 do_classifier_free_guidance=True,
                 negative_prompt=None,
@@ -1250,7 +1273,7 @@ class StableDiffusionXLPipeline(
                 clip_skip=None,
             )
 
-        timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, device, None)
+        timesteps, num_inference_steps = retrieve_timesteps(self.scheduler, num_inference_steps, self.accelerator.device, None)
 
         latents = self.prepare_latents(
             1,
@@ -1258,7 +1281,7 @@ class StableDiffusionXLPipeline(
             image_size,
             image_size,
             prompt_embeds.dtype,
-            device,
+            self.accelerator.device,
             None,
             None,
         )
@@ -1273,7 +1296,7 @@ class StableDiffusionXLPipeline(
             text_encoder_projection_dim=1280,
         )
 
-        add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0).to(device)
+        add_time_ids = torch.cat([add_time_ids, add_time_ids], dim=0).to(self.accelerator.device)
         prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
         add_text_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
         
@@ -1283,14 +1306,16 @@ class StableDiffusionXLPipeline(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
 
-        for i, t in enumerate(timesteps):
-            latent_model_input = torch.cat([latents] * 2)
-            latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
+        self.unet.train()
+        with self.accelerator.accumulate(self.unet):
+            for i, t in enumerate(timesteps):
+                latent_model_input = torch.cat([latents] * 2)
+                latent_model_input = self.scheduler.scale_model_input(latent_model_input, t)
 
-            added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
+                added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
 
-            #self.unet.requires_grad_(False)
-            noise_pred = self.unet(
+                #self.unet.requires_grad_(False)
+                noise_pred = self.unet(
                     latent_model_input,
                     t,
                     encoder_hidden_states=prompt_embeds,
@@ -1298,21 +1323,21 @@ class StableDiffusionXLPipeline(
                     cross_attention_kwargs=None,
                     added_cond_kwargs=added_cond_kwargs,
                     return_dict=False,
-            )[0]
+                )[0]
 
-            noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
-            noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
+                noise_pred_uncond, noise_pred_text = noise_pred.chunk(2)
+                noise_pred = noise_pred_uncond + 5.0 * (noise_pred_text - noise_pred_uncond)
             
-            latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
+                latents = self.scheduler.step(noise_pred, t, latents, **extra_step_kwargs, return_dict=False)[0]
 
-        self.upcast_vae()
-        latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
-        self.vae.requires_grad_(False)
-        test_image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
-        image = test_image
-        image = self.image_processor.postprocess(image.detach(), output_type="pil")
-        image = StableDiffusionXLPipelineOutput(images=image)
-        self.vae.to(dtype=torch.float16)
+            self.upcast_vae()
+            latents = latents.to(next(iter(self.vae.post_quant_conv.parameters())).dtype)
+            self.vae.requires_grad_(False)
+            test_image = self.vae.decode(latents / self.vae.config.scaling_factor, return_dict=False)[0]
+            image = test_image
+            image = self.image_processor.postprocess(image.detach(), output_type="pil")
+            image = StableDiffusionXLPipelineOutput(images=image)
+            self.vae.to(dtype=torch.float16)
 
         print(latents)
         return image
